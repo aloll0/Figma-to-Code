@@ -157,8 +157,7 @@ const MobileNav = () => {
     <div className="lg:hidden fixed top-0 left-0 right-0 bg-card/80 backdrop-blur-xl border-b border-border z-50">
       <div className="flex items-center justify-between p-4">
         <Link to="/" className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <span className="font-bold">AI Design→Code</span>
+          <img src="images/logo.svg" alt="Logo" className="w-13 h-14" />
         </Link>
         <select 
           value={location.pathname}
