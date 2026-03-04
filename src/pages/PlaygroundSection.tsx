@@ -6,12 +6,12 @@ import {
   Send,
   CheckCircle2,
   Code2,
-  Figma,
   Palette,
   Eye,
   Download,
   RefreshCw,
   ArrowRight,
+  Monitor,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -22,26 +22,55 @@ import CodeBlock from '@/components/CodeBlock';
 const PlaygroundSection = () => {
   const [prompt, setPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<null | {
-    designTokens: string;
-    figmaJSON: string;
+    htmlPreview: string;
     reactCode: string;
+    designTokens: string | object;
   }>(null);
 
   const handleGenerate = async () => {
+    if (!prompt.trim()) return;
     setIsGenerating(true);
+    setError(null);
+    setResult(null);
 
-    const res = await fetch("http://localhost:3001/api/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt }),
-    });
+    try {
+      const res = await fetch('http://localhost:3001/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+      });
 
-    const data = await res.json();
-    setResult(data);
+      const data = await res.json();
+
+      if (data.error) {
+        setError(data.error);
+      } else {
+        setResult(data);
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Network error – is the server running?');
+    }
 
     setIsGenerating(false);
   };
+
+  const handleDownload = () => {
+    if (!result?.htmlPreview) return;
+    const blob = new Blob([result.htmlPreview], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'generated-design.html';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const tokensString =
+    typeof result?.designTokens === 'object'
+      ? JSON.stringify(result.designTokens, null, 2)
+      : (result?.designTokens ?? '');
 
   const examplePrompts = [
     'Create a modern landing page for a coffee shop',
@@ -55,7 +84,7 @@ const PlaygroundSection = () => {
       <div>
         <h2 className="text-3xl font-bold mb-4">AI Playground</h2>
         <p className="text-muted-foreground text-lg">
-          Try the design-to-code conversion. Enter a description and see the generated output.
+          Describe any UI and get a live preview, React code, and design tokens — powered by Gemini AI.
         </p>
       </div>
 
@@ -73,6 +102,9 @@ const PlaygroundSection = () => {
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             className="min-h-[120px] bg-black/30 border-white/10 resize-none"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleGenerate();
+            }}
           />
           <div className="flex flex-wrap gap-2">
             <span className="text-sm text-muted-foreground">Examples:</span>
@@ -94,7 +126,7 @@ const PlaygroundSection = () => {
           >
             {isGenerating ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Generating...
+                <Loader2 className="w-4 h-4 animate-spin" /> Generating with Gemini AI…
               </>
             ) : (
               <>
@@ -102,8 +134,22 @@ const PlaygroundSection = () => {
               </>
             )}
           </Button>
+          {isGenerating && (
+            <p className="text-center text-xs text-muted-foreground">
+              ⏳ Usually takes 5–15 seconds…
+            </p>
+          )}
         </CardContent>
       </Card>
+
+      {/* Error */}
+      {error && (
+        <Card className="border-red-500/40 bg-red-500/10">
+          <CardContent className="pt-4 text-sm text-red-400">
+            ❌ {error}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Output Section */}
       {result && (
@@ -113,19 +159,49 @@ const PlaygroundSection = () => {
             <span className="font-semibold">Generation Complete!</span>
           </div>
 
-          <Tabs defaultValue="react" className="w-full">
+          <Tabs defaultValue="preview" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="preview">
+                <Monitor className="w-4 h-4 mr-2" /> Live Preview
+              </TabsTrigger>
               <TabsTrigger value="react">
                 <Code2 className="w-4 h-4 mr-2" /> React Code
-              </TabsTrigger>
-              <TabsTrigger value="figma">
-                <Figma className="w-4 h-4 mr-2" /> Figma JSON
               </TabsTrigger>
               <TabsTrigger value="tokens">
                 <Palette className="w-4 h-4 mr-2" /> Design Tokens
               </TabsTrigger>
             </TabsList>
 
+            {/* ── Live Preview ── */}
+            <TabsContent value="preview" className="mt-4">
+              <Card className="glass-card">
+                <CardHeader className="flex flex-row items-center justify-between">
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Eye className="w-4 h-4 text-emerald-400" />
+                    Live Preview
+                  </CardTitle>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={handleDownload}
+                  >
+                    <Download className="w-4 h-4" /> Download HTML
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0 overflow-hidden rounded-b-lg">
+                  <iframe
+                    srcDoc={result.htmlPreview}
+                    title="Generated Design Preview"
+                    className="w-full border-0 rounded-b-lg"
+                    style={{ height: '600px' }}
+                    sandbox="allow-scripts allow-same-origin"
+                  />
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* ── React Code ── */}
             <TabsContent value="react" className="mt-4">
               <Card className="glass-card">
                 <CardHeader className="flex flex-row items-center justify-between">
@@ -133,14 +209,16 @@ const PlaygroundSection = () => {
                     <Code2 className="w-4 h-4 text-cyan-400" />
                     Generated React Component
                   </CardTitle>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Eye className="w-4 h-4" /> Preview
-                    </Button>
-                    <Button variant="outline" size="sm" className="gap-2">
-                      <Download className="w-4 h-4" /> Download
-                    </Button>
-                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => {
+                      navigator.clipboard.writeText(result.reactCode);
+                    }}
+                  >
+                    Copy
+                  </Button>
                 </CardHeader>
                 <CardContent>
                   <CodeBlock code={result.reactCode} language="tsx" />
@@ -148,23 +226,7 @@ const PlaygroundSection = () => {
               </Card>
             </TabsContent>
 
-            <TabsContent value="figma" className="mt-4">
-              <Card className="glass-card">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Figma className="w-4 h-4 text-purple-400" />
-                    Figma-Compatible JSON
-                  </CardTitle>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Figma className="w-4 h-4" /> Open in Figma
-                  </Button>
-                </CardHeader>
-                <CardContent>
-                  <CodeBlock code={result.figmaJSON} language="json" />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
+            {/* ── Design Tokens ── */}
             <TabsContent value="tokens" className="mt-4">
               <Card className="glass-card">
                 <CardHeader>
@@ -174,7 +236,7 @@ const PlaygroundSection = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <CodeBlock code={result.designTokens} language="json" />
+                  <CodeBlock code={tokensString} language="json" />
                 </CardContent>
               </Card>
             </TabsContent>
