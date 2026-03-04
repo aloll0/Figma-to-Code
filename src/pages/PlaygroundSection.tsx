@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import {
   Wand2,
   Loader2,
@@ -10,8 +9,6 @@ import {
   Eye,
   Download,
   RefreshCw,
-  ArrowRight,
-  Monitor,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -84,7 +81,7 @@ const PlaygroundSection = () => {
       <div>
         <h2 className="text-3xl font-bold mb-4">AI Playground</h2>
         <p className="text-muted-foreground text-lg">
-          Describe any UI and get a live preview, React code, and design tokens — powered by Gemini AI.
+          Describe any UI and get a live preview, React code, and design tokens.
         </p>
       </div>
 
@@ -126,7 +123,7 @@ const PlaygroundSection = () => {
           >
             {isGenerating ? (
               <>
-                <Loader2 className="w-4 h-4 animate-spin" /> Generating with Gemini AI…
+                <Loader2 className="w-4 h-4 animate-spin" /> Generating with AI…
               </>
             ) : (
               <>
@@ -153,17 +150,60 @@ const PlaygroundSection = () => {
 
       {/* Output Section */}
       {result && (
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-            <span className="font-semibold">Generation Complete!</span>
+        <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              <span className="font-semibold">تم التوليد بنجاح!</span>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={handleDownload}
+              >
+                <Download className="w-4 h-4" /> تحميل HTML
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  const win = window.open('', '_blank');
+                  if (win) { win.document.write(result.htmlPreview); win.document.close(); }
+                }}
+              >
+                <Eye className="w-4 h-4" /> فتح في تاب جديد
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setResult(null)} className="gap-2">
+                <RefreshCw className="w-4 h-4" /> جديد
+              </Button>
+            </div>
           </div>
 
-          <Tabs defaultValue="preview" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="preview">
-                <Monitor className="w-4 h-4 mr-2" /> Live Preview
-              </TabsTrigger>
+          {/* ── Live Preview (always visible, full width) ── */}
+          <div className="rounded-xl overflow-hidden border border-white/10 bg-white shadow-2xl">
+            <div className="flex items-center gap-2 px-4 py-2 bg-black/60 border-b border-white/10">
+              <div className="flex gap-1.5">
+                <div className="w-3 h-3 rounded-full bg-red-500/70" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500/70" />
+                <div className="w-3 h-3 rounded-full bg-green-500/70" />
+              </div>
+              <span className="text-xs text-muted-foreground ml-2 font-mono">preview</span>
+            </div>
+            <iframe
+              srcDoc={result.htmlPreview}
+              title="Generated Design Preview"
+              className="w-full border-0"
+              style={{ height: '650px' }}
+              sandbox="allow-scripts allow-same-origin"
+            />
+          </div>
+
+          {/* ── Code Tabs below preview ── */}
+          <Tabs defaultValue="react" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="react">
                 <Code2 className="w-4 h-4 mr-2" /> React Code
               </TabsTrigger>
@@ -172,51 +212,13 @@ const PlaygroundSection = () => {
               </TabsTrigger>
             </TabsList>
 
-            {/* ── Live Preview ── */}
-            <TabsContent value="preview" className="mt-4">
-              <Card className="glass-card">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-emerald-400" />
-                    Live Preview
-                  </CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={handleDownload}
-                  >
-                    <Download className="w-4 h-4" /> Download HTML
-                  </Button>
-                </CardHeader>
-                <CardContent className="p-0 overflow-hidden rounded-b-lg">
-                  <iframe
-                    srcDoc={result.htmlPreview}
-                    title="Generated Design Preview"
-                    className="w-full border-0 rounded-b-lg"
-                    style={{ height: '600px' }}
-                    sandbox="allow-scripts allow-same-origin"
-                  />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* ── React Code ── */}
             <TabsContent value="react" className="mt-4">
               <Card className="glass-card">
-                <CardHeader className="flex flex-row items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Code2 className="w-4 h-4 text-cyan-400" />
-                    Generated React Component
+                <CardHeader className="flex flex-row items-center justify-between py-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Code2 className="w-4 h-4 text-cyan-400" /> React Component
                   </CardTitle>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2"
-                    onClick={() => {
-                      navigator.clipboard.writeText(result.reactCode);
-                    }}
-                  >
+                  <Button variant="outline" size="sm" onClick={() => navigator.clipboard.writeText(result.reactCode)}>
                     Copy
                   </Button>
                 </CardHeader>
@@ -226,13 +228,11 @@ const PlaygroundSection = () => {
               </Card>
             </TabsContent>
 
-            {/* ── Design Tokens ── */}
             <TabsContent value="tokens" className="mt-4">
               <Card className="glass-card">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Palette className="w-4 h-4 text-orange-400" />
-                    Design Tokens
+                <CardHeader className="py-3">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Palette className="w-4 h-4 text-orange-400" /> Design Tokens
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -241,17 +241,6 @@ const PlaygroundSection = () => {
               </Card>
             </TabsContent>
           </Tabs>
-
-          <div className="flex gap-4">
-            <Button variant="outline" onClick={() => setResult(null)} className="gap-2">
-              <RefreshCw className="w-4 h-4" /> New Generation
-            </Button>
-            <Link to="/architecture">
-              <Button variant="outline" className="gap-2">
-                <ArrowRight className="w-4 h-4" /> Learn How It Works
-              </Button>
-            </Link>
-          </div>
         </div>
       )}
     </div>

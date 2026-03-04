@@ -7,6 +7,7 @@ const MobileNav = () => {
   const sections = [
     { id: '/', label: 'Home' },
     { id: '/playground', label: 'Playground' },
+    { id: '/figma-dashboard', label: 'Figma Dashboard' },
     { id: '/architecture', label: 'Architecture' },
     { id: '/data-structure', label: 'Data Structure' },
     { id: '/code-generation', label: 'Code Gen' },

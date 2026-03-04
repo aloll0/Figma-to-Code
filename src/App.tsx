@@ -12,6 +12,7 @@ import VSCodeSyncSection from '@/pages/VSCodeSyncSection';
 import RoadmapSection from '@/pages/RoadmapSection';
 import TechStackSection from '@/pages/TechStackSection';
 import SystemPromptSection from '@/pages/SystemPromptSection';
+import FigmaDashboard from '@/pages/FigmaDashboard';
 
 function App() {
   return (
@@ -63,6 +64,11 @@ function App() {
                 <SystemPromptSection />
               </div>
             } />
+            <Route path="/figma-dashboard" element={
+              <div className="section-padding max-w-6xl mx-auto">
+                <FigmaDashboard />
+              </div>
+            } />
           </Routes>
         </main>
 
@@ -78,7 +84,7 @@ function App() {
           </div>
         </footer>
       </div>
-    </Router>
+    </Router>  
   );
 }
 

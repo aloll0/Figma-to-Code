@@ -10,6 +10,7 @@ import {
   Layers,
   FileCode,
   ChevronRight,
+  Figma,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -19,6 +20,7 @@ const Navigation = () => {
   const sections = [
     { id: '/', label: 'Home', icon: Sparkles },
     { id: '/playground', label: 'Playground', icon: Play },
+    { id: '/figma-dashboard', label: 'Figma Dashboard', icon: Figma },
     { id: '/architecture', label: 'Architecture', icon: Cpu },
     { id: '/data-structure', label: 'Data Structure', icon: Database },
     { id: '/code-generation', label: 'Code Generation', icon: Code2 },
